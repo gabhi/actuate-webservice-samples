@@ -1,0 +1,18 @@
+Global setup:
+
+ Set up git
+  git config --global user.name "Your Name"
+  git config --global user.email dhydrated@gmail.com
+        
+
+Next steps:
+
+  mkdir actuate-webservice-samples
+  cd actuate-webservice-samples
+  git init
+  touch README
+  git add README
+  git commit -m 'first commit'
+  git remote add origin git@github.com:dhydrated/actuate-webservice-samples.git OR https://dhydrated@github.com/dhydrated/actuate-webservice-samples.git
+  git push -u origin master
+      

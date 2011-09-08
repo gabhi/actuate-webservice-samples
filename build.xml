@@ -1,0 +1,158 @@
+<project name="ActuateClient" default="compile" basedir=".">
+
+
+
+	<!-- set global properties for this build -->
+  	<property name="src" location="source"/>
+  	<property name="build" location="build"/>
+  	<property name="dist"  location="dist"/>
+  	<property name="package" value="com.actuate.schemas"/>
+
+  	<!-- Choose one of these wsdl property, either a localfile or from server -->
+  	<!-- property name="wsdl" location="${src}/ActuateAPI.wsdl"/ -->
+  	<property name="wsdl" value="http://${hostName}:${port}/wsdl/v11/axis/all"/>
+	<property name="lib.path"	value="lib" />
+	<path id="axis.classpath">
+		<fileset dir="${lib.path}">
+			<include name="**/*.jar" />
+		</fileset>
+	</path>
+
+
+	<taskdef resource="axis-tasks.properties" classpathref="axis.classpath" />
+
+	<!-- PATH -->
+
+	<path id="JarAxis">
+			<!-- Apache Axis
+				 http://xml.apache.org/axis/index.html
+				 Normally this point to libraries in AXIS installation directory
+			  -->
+		    <pathelement location="lib/axis.jar"/>
+		    <pathelement location="lib/commons-discovery.jar"/>
+		    <pathelement location="lib/commons-logging.jar"/>
+		    <pathelement location="lib/log4j-1.2.4.jar"/>
+		    <pathelement location="lib/jaxrpc.jar"/>
+		    <pathelement location="lib/wsdl4j.jar"/>
+	</path>
+	<path id="JarJAF">
+			<!-- JavaBeans(TM) Activation Framework (JAF) 1.0.2
+ 				 http://java.sun.com/products/javabeans/glasgow/jaf.html -->
+		    <pathelement location="lib/activation.jar"/>
+	</path>
+	<path id="JarJavaMail">
+		    <!-- JavaMail(TM) 1.3
+		    	 http://java.sun.com/products/javamail/index.html -->
+		    <pathelement location="lib/mail.jar"/>
+	</path>
+	<path id="JarSAAJ">
+		    <!-- SOAP with Attachments API for JavaTM
+		         http://java.sun.com/xml/downloads/saaj.html -->
+		    <pathelement location="lib/saaj.jar"/>
+	</path>
+	<path id="JarServlet">
+		    <!-- Your favorite servlet jar -->
+		    <pathelement location="lib/servlet.jar"/>
+	</path>
+	<path id="JarXerces">
+		    <!-- Your favorite XML Parser-->
+		    <pathelement location="lib/xercesImpl.jar"/>
+		    <pathelement location="lib/xmlParserAPIs.jar"/>
+	</path>
+
+
+
+	<!-- TARGET -->
+
+  	<target name="init">
+
+    	<!-- Create the time stamp -->
+    	<tstamp/>
+
+    	<!-- Create the build directory structure used by compile -->
+    	<mkdir dir="${build}"/>
+
+  	</target>
+
+	<!-- generate proxy source code from WSDL file -->
+  	<target name="proxySource" 
+		  	description="Generate Information Delivery API Java Code from Web Services Definition Language">
+
+		<!-- Generate code -->
+		<axis-wsdl2java url="${wsdl}"
+			output="${src}"
+			verbose="no"
+			testcase="no"
+			timeout="10000000"
+			wrapArrays ="true" 
+			serverside="false">
+			<mapping namespace="http://schemas.actuate.com/actuate11/wsdl" package="com.actuate.schemas"/>
+			<mapping namespace="http://schemas.actuate.com/actuate11" package="com.actuate.schemas"/>
+		</axis-wsdl2java>
+	
+
+  	</target>
+
+
+ 	<target name="compile" depends="init, proxySource"
+ 			description="compile the source">
+
+	    	<!-- Create the time stamp -->
+    		<tstamp/>
+
+		<!-- Compile the java code from ${src} into ${build} -->
+		<javac	
+			srcdir="${src}"
+    			destdir="${build}"
+			classpathref="axis.classpath" />
+
+		<antcall target="createjar">
+			<param name="resources.jar.name"		value="${lib.path}/idapi.jar" />
+			<param name="resources.source"		value="${build}" />
+			<param name="resources.jar.include"		value="com/actuate/schemas/*.class" />
+			<param name="resources.excludes"		value="" />
+		</antcall>   
+		
+
+  	</target>
+
+	<target name="createjar">
+		<echo message="creating ${resources.jar.name} ..." />
+		<jar jarfile="${resources.jar.name}"
+				basedir="${resources.source}"
+				includes="${resources.jar.include}"
+				excludes="${resources.excludes}"/>
+	</target>
+
+	
+  	<target name="dist" depends="compile"
+        	description="generate the distribution" >
+    	<!-- Create the distribution directory -->
+    	<mkdir dir="${dist}/lib"/>
+
+    	<!-- Put everything in ${build} into the MyProject-${DSTAMP}.jar file -->
+    	<jar jarfile="${dist}/lib/ActuateClient-${DSTAMP}.jar" basedir="${build}"/>
+  	</target>
+
+  	<target name="clean"
+        	description="clean up" >
+    	<!-- Delete the ${build} and ${dist} directory trees -->
+    	<delete dir="${src}/com/actuate/schemas"/>
+    	<delete dir="${build}"/>
+    	<delete dir="${dist}"/>
+  	</target>
+
+	<target name="documentation"
+			description="Run javadoc on proxy source code"
+			>
+		<javadoc
+			packagenames="com.actuate.schemas.*"
+			sourcepath="source"
+			destdir="docs"
+			>
+			<classpath refid="JarAxis"/>
+		</javadoc>
+	</target>
+
+</project>
+
